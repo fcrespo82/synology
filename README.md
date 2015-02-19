@@ -9,3 +9,4 @@ My personal scripts in Synology DS413j NAS
 - organize-media
 - remove-orphans-from-index
 - update-namecheap-nas
+- watch-tv-shows
