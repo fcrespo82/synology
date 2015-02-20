@@ -2,12 +2,12 @@
 # coding: utf-8
 """
 usage:
-        organize_media.py [-v] [-d] [-f <to_file>]
+    organize_media.py [-d] [-v] [-f <to_file>]
 
 options:
-        -v                          Verbose
-        -d                          Disable dry run
-        -f <to_file>                True or False [default: ./organize_media.log]
+    -v              Verbose
+    -d              Dry run
+    -f <to_file>    True or False [default: ./organize_media.log]
 """
 
 from __future__ import unicode_literals, print_function
@@ -25,7 +25,7 @@ VERSION = "1.0.0"
 
 
 def extension(f):
-        return f[-3:]
+    return f[-3:]
 
 
 def mediaDate(f):
@@ -68,16 +68,20 @@ def main():
         logging.debug("DEBUG: {0}".format(OPTIONS["-v"]))
         logging.debug("DRY_RUN: {0}".format(OPTIONS["-d"]))
 
-        month_names = [u"01 - Janeiro", u"02 - Fevereiro", u"03 - Marco",
-                       u"04 - Abril", u"05 - Maio", u"06 - Junho",
-                       u"07 - Julho", u"08 - Agosto", u"09 - Setembro",
-                       u"10 - Outubro", u"11 - Novembro", u"12 - Dezembro"]
+        month_names = [u"01", u"02", u"03",
+                       u"04", u"05", u"06",
+                       u"07", u"08", u"09",
+                       u"10", u"11", u"12"]
 
         destinationDir = {
             "jpg": "/volume1/photo",
+            "cr2": "/volume1/photo",
             "mov": "/volume1/video",
             "mp4": "/volume1/video"
         }
+
+        extensions = ["mts", "mov", "jpg", "3gp", "mp4", "m4v", "avi", "cr2"]
+
         logging.info("Destination dir {0}".format(destinationDir))
 
         sourceDir = "/volume1/photo/import"
@@ -215,8 +219,6 @@ if __name__ == "__main__":
     # print("Dry run {}".format(DRY_RUN))
 
     # print(DEBUG, DRY_RUN, LOG_TO_FILE)
-
-    extensions = ["mts", "mov", "jpg", "3gp", "mp4", "m4v", "avi"]
 
     HORA = datetime.now()
     main()
