@@ -28,12 +28,16 @@ from PIL import Image
 VERSION = "1.0.0"
 
 
+def expandall(a_path):
+    return os.path.expandvars(os.path.expanduser(ARGS["DESTINATION"]))
+
+
 def fullpath(root, a_dir):
     return os.path.join(root, a_dir)
 
 
 def extensions_ok(a_file):
-    if re.match(r".*\.(jpg)$", a_file):
+    if a_file[-3:].lower() in ["jpg", "cr2"]:
         return True
     else:
         return False
@@ -42,7 +46,10 @@ def extensions_ok(a_file):
 def bigger(image_path):
     logging.debug("Checking size")
     the_image = Image.open(image_path)
-    the_return = True if the_image.size[0]*the_image.size[1] > 4000000 else False
+    if the_image.size[0]*the_image.size[1] > 4000000:
+        the_return = True
+    else:
+        the_return = False
     logging.debug("Checked")
     return the_return
 
@@ -60,7 +67,8 @@ def get_last_photos(quantity, from_path):
         logging.debug(the_match)
 
         if not the_match:
-            dirs[:] = sorted([x for x in dirs if re.match(r".*[0-9]{4}$", x)], reverse=True)
+            dirs[:] = sorted([x for x in dirs if re.match(r".*[0-9]{4}$", x)],
+                             reverse=True)
 
         logging.debug(dirs)
         logging.debug(files)
@@ -84,7 +92,7 @@ if __name__ == '__main__':
 
     try:
         import coloredlogs
-        coloredlogs.install(level=THE_LEVEL)
+        coloredlogs.install(level=THE_LEVEL, show_hostname=False, show_name=False)
     except ImportError:
         logging.basicConfig(level=THE_LEVEL)
 
@@ -95,25 +103,41 @@ if __name__ == '__main__':
     logging.info("Got it")
 
     ONLY_NAMES_ON_SOURCE = [os.path.basename(photo) for photo in LAST_PHOTOS]
-    ONLY_NAMES_ON_DESTINATION = [os.path.basename(photo) for photo in os.listdir(os.path.expanduser(ARGS["DESTINATION"])) if re.match(r'.*\.(jpg)$', photo)]
+
+    if not os.path.exists(expandall(ARGS["DESTINATION"])):
+        if ARGS["-d"]:
+            logging.debug("Making folder {0}".format(expandall(ARGS["DESTINATION"])))
+        else:
+            os.makedirs(expandall(ARGS["DESTINATION"]))
+
+    ONLY_NAMES_ON_DESTINATION = [os.path.basename(photo) for photo
+                                 in os.listdir(expandall(ARGS["DESTINATION"]))
+                                 if re.match(r'.*\.(jpg)$', photo)]
 
     logging.info('Identifying photos to add')
 
     PHOTOS_TO_ADD = set(ONLY_NAMES_ON_SOURCE) - set(ONLY_NAMES_ON_DESTINATION)
-    PHOTOS_TO_ADD_TUPLE_LIST = [(photo, os.path.join(os.path.expanduser(ARGS["DESTINATION"]), os.path.basename(photo))) for photo in LAST_PHOTOS if os.path.basename(photo) in PHOTOS_TO_ADD]
+    PHOTOS_TO_ADD_TUPLE_LIST = [(photo,
+                                os.path.join(expandall(ARGS["DESTINATION"]),
+                                 os.path.basename(photo))) for photo
+                                in LAST_PHOTOS
+                                if os.path.basename(photo) in PHOTOS_TO_ADD]
     TOTAL_PHOTOS_TO_ADD = len(PHOTOS_TO_ADD_TUPLE_LIST)
 
     logging.info("DONE")
 
     logging.info('Identifying photos to remove')
 
-    PHOTOS_TO_REMOVE = sorted(ONLY_NAMES_ON_DESTINATION, reverse=True)[:len(PHOTOS_TO_ADD)]
-    PHOTOS_TO_REMOVE_FULLPATH = [os.path.join(os.path.expanduser(ARGS["DESTINATION"]), photo) for photo in PHOTOS_TO_REMOVE]
+    PHOTOS_TO_REMOVE = sorted(ONLY_NAMES_ON_DESTINATION,
+                              reverse=True)[:len(PHOTOS_TO_ADD)]
+    PHOTOS_TO_REMOVE_FULLPATH = [os.path.join(expandall(ARGS["DESTINATION"]),
+                                 photo) for photo in PHOTOS_TO_REMOVE]
     TOTAL_PHOTOS_TO_REMOVE = len(PHOTOS_TO_REMOVE_FULLPATH)
 
     logging.info("DONE")
 
-    logging.info('Removing {photos} photos'.format(photos=TOTAL_PHOTOS_TO_REMOVE))
+    logging.info('Removing {photos} photos'
+                 .format(photos=TOTAL_PHOTOS_TO_REMOVE))
     for i, photo in enumerate(PHOTOS_TO_REMOVE_FULLPATH):
         logging.debug(TOTAL_PHOTOS_TO_REMOVE - i)
         # print(photo)
@@ -121,9 +145,11 @@ if __name__ == '__main__':
             logging.debug(photo)
         else:
             os.remove(photo)
-    logging.info('Removed {photos} photos'.format(photos=TOTAL_PHOTOS_TO_REMOVE))
+    logging.info('Removed {photos} photos'
+                 .format(photos=TOTAL_PHOTOS_TO_REMOVE))
 
-    logging.info('Adding {photos} photos'.format(photos=TOTAL_PHOTOS_TO_ADD))
+    logging.info('Adding {photos} photos'
+                 .format(photos=TOTAL_PHOTOS_TO_ADD))
     for i, item in enumerate(PHOTOS_TO_ADD_TUPLE_LIST):
         src, dst = item
         logging.debug(TOTAL_PHOTOS_TO_ADD - i)
@@ -137,8 +163,14 @@ if __name__ == '__main__':
     # After add and remove check if any photo needs resize
     logging.info('Identifying photos to resize')
 
-    PHOTOS_TO_RESIZE = sorted(os.listdir(os.path.expanduser(ARGS["DESTINATION"])), reverse=True)[:len(PHOTOS_TO_ADD)]
-    PHOTOS_TO_RESIZE = [os.path.join(os.path.expanduser(ARGS["DESTINATION"]), os.path.basename(photo)) for photo in PHOTOS_TO_RESIZE if re.match(r".*\.(jpg)$", photo) and bigger(os.path.join(os.path.expanduser(ARGS["DESTINATION"]), os.path.basename(photo)))]
+    PHOTOS_TO_RESIZE = sorted(os.listdir(expandall(ARGS["DESTINATION"])),
+                              reverse=True)[:len(PHOTOS_TO_ADD)]
+    PHOTOS_TO_RESIZE = [os.path.join(expandall(ARGS["DESTINATION"]),
+                        os.path.basename(photo)) for photo
+                        in PHOTOS_TO_RESIZE
+                        if re.match(r".*\.(jpg)$", photo) and bigger(
+                            os.path.join(expandall(ARGS["DESTINATION"]),
+                                         os.path.basename(photo)))]
     TOTAL_PHOTOS_TO_RESIZE = len(PHOTOS_TO_RESIZE)
 
     logging.info('Resizing {} photos'.format(TOTAL_PHOTOS_TO_RESIZE))

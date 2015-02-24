@@ -46,7 +46,7 @@ def should_process(the_file):
         return False
 
 
-def get_exif(fn):  # Melhorar para pegar apenas a data e testar com Canon e iPhone
+def get_exif(fn):
     from PIL import Image
     from PIL.ExifTags import TAGS
     ret = {}
@@ -75,7 +75,7 @@ def full_dir_from_date(date, extension):
     return os.path.join(root, date.strftime(CONFIG["PATH_FORMAT"]))
 
 
-def get_date(fn):
+def get_date(fn):  # testar com Canon e iPhone
     the_date = get_exif(fn)["DateTimeOriginal"]
     return datetime.strptime(the_date, "%Y:%m:%d %H:%M:%S")
 
@@ -150,7 +150,6 @@ def main():
                     logging.info("DRY_RUN - Moving from {0} to {1}".
                                  format(from_file, CONFIG["ERROR_DIR"] +
                                         from_filename))
-                # problems.append(from_filename)
             except:
                 sys.exit("Execution stopped.")
 
