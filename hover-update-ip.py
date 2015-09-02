@@ -40,7 +40,7 @@ class HoverAPI(object):
         logging.debug(response)
         if not response.ok or "hoverauth" not in response.cookies:
             raise HoverException(response)
-        self.cookies = {"hoverauth": response.cookies["hoverauth"]}
+        self.cookies = response.cookies
 
     def call(self, method, resource, data=None):
         url = "https://www.hover.com/api/{0}".format(resource)
